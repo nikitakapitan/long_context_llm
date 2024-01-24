@@ -35,14 +35,11 @@ def compute_f1_score(dataset, model_predictions, k):
     return avg_f1
 
 # Example usage
-dataset_example = {
-    # ... (your dataset structure here)
-}
-
-model_predictions = [
-    # ... (your model predictions here for each question)
-]
+"""
+dataset_example = {# ... (your dataset structure here)}
+model_predictions = [# ... (your model predictions here for each question)]
 
 k = 5  # Number of shots for in-context learning
 f1 = compute_f1_score(dataset_example, model_predictions, k)
 print(f1)
+"""

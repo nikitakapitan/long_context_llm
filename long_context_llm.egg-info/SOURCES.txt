@@ -3,5 +3,6 @@ setup.py
 long_context_llm.egg-info/PKG-INFO
 long_context_llm.egg-info/SOURCES.txt
 long_context_llm.egg-info/dependency_links.txt
+long_context_llm.egg-info/requires.txt
 long_context_llm.egg-info/top_level.txt
 src/__init__.py
