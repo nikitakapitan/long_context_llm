@@ -22,12 +22,18 @@ def prepare_k_shot_prompt(articles, k):
     k (int): The number of examples (articles) to include in the prompt.
 
     Returns:
-    str: A formatted string k-shot learning prompt from multiple QASPER dataset articles
+    str: A formatted string k-shot learning prompt from multiple QASPER dataset articles, excluding the answer for the last question.
     """
     prompt = ""
 
     # Ensure we do not exceed the number of available articles
     k = min(k, len(articles))
+
+    # Calculate the total number of questions
+    total_questions = sum(len(article['qas']['question']) for article in articles[:k])
+
+    # Counter for the current question number across all articles
+    current_question_number = 0
 
     # Process each article
     for i in range(k):
@@ -50,27 +56,32 @@ def prepare_k_shot_prompt(articles, k):
 
         # Adding Questions and Answers
         for l, (question, answer_block) in enumerate(zip(article['qas']['question'], article['qas']['answers'])):
-            
+            current_question_number += 1
+
             prompt += f"[Q{l+1}] {question}\n"
 
-            answers = answer_block['answer']
-
-            if answers[0]['free_form_answer'] != '': # free answer
-                max_free = answers[0]['free_form_answer']
-                for answer in answers:
-                    if len(answer['free_form_answer']) > len(max_free):
-                        max_free = answer['free_form_answer']
-                answer_text = max_free
-            elif answers[0]['extractive_spans']: # Extractive
-                max_span = answers[0]['extractive_spans']
-                for answer in answers:
-                    if len(answer['extractive_spans']) > len(max_span): # compare len of lists
-                        max_span = answer['extractive_spans']
-                answer_text = "; ".join(max_span).strip()
+            # Check if the current question is not the last question across all articles
+            if current_question_number < total_questions:
+                answers = answer_block['answer']
+                if answers[0]['free_form_answer'] != '': # free answer
+                    max_free = answers[0]['free_form_answer']
+                    for answer in answers:
+                        if len(answer['free_form_answer']) > len(max_free):
+                            max_free = answer['free_form_answer']
+                    answer_text = max_free
+                elif answers[0]['extractive_spans']: # Extractive
+                    max_span = answers[0]['extractive_spans']
+                    for answer in answers:
+                        if len(answer['extractive_spans']) > len(max_span): # compare len of lists
+                            max_span = answer['extractive_spans']
+                    answer_text = "; ".join(max_span).strip()
+                else:
+                    raise ValueError('Both free_form and extractive are empty')
+                    
+                prompt += f"[A{l+1}] {answer_text}\n"
             else:
-                raise ValueError('Both free_form and extractive are empty')
-                
-            prompt += f"[A{l+1}] {answer_text}\n"
+                prompt += "[INST] Answer the following question without further elaboration or additional content.:\n"
+                prompt += f"[A{l+1}]"
 
         # Separator between articles
         if i < k - 1:
@@ -81,3 +92,4 @@ def prepare_k_shot_prompt(articles, k):
         prompt = prompt.replace(char, '')
         
     return prompt
+
